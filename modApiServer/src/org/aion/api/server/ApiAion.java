@@ -471,7 +471,7 @@ public abstract class ApiAion extends Api {
 
         Address from = _params.getFrom();
 
-        if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
+        if (from == null || from.isEmptyAddress()) {
             return null;
         }
 
@@ -537,7 +537,7 @@ public abstract class ApiAion extends Api {
 
         Address from = _params.getFrom();
 
-        if (from == null || from.equals(Address.EMPTY_ADDRESS())) {
+        if (from == null || from.isEmptyAddress()) {
             LOG.error("<send-transaction msg=invalid-from-address>");
             return null;
         }
