@@ -27,7 +27,6 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import io.undertow.util.FileUtils;
@@ -39,14 +38,11 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import org.aion.api.server.rpc.ApiWeb3Aion;
-import org.aion.api.server.rpc.RpcError;
-import org.aion.api.server.rpc.RpcMsg;
 import org.aion.api.server.types.ArgTxCall;
 import org.aion.api.server.types.SyncInfo;
 import org.aion.base.type.Address;
 import org.aion.base.type.ITransaction;
 import org.aion.base.type.ITxReceipt;
-import org.aion.base.util.TypeConverter;
 import org.aion.crypto.ed25519.ECKeyEd25519;
 import org.aion.evtmgr.impl.evt.EventBlock;
 import org.aion.evtmgr.impl.evt.EventDummy;
@@ -62,8 +58,6 @@ import org.aion.zero.impl.types.AionBlock;
 import org.aion.zero.impl.types.AionBlockSummary;
 import org.aion.zero.types.AionTransaction;
 import org.aion.zero.types.AionTxReceipt;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -518,139 +512,5 @@ public class ApiAionTest {
                 impl.getBlockMiner().getHashrate() + hashRate,
                 Double.parseDouble(api.getHashrate()),
                 0.001);
-    }
-
-    @Test
-    public void testEthSignTransaction() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", "0x" + addr.toString());
-        tx.put("to", "0x" + toAddr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        jsonArray.put(addr);
-
-        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        JSONObject outTx = (JSONObject) result.get("tx");
-        String raw = (String) result.get("raw");
-
-        assertNotNull(result);
-        assertNotNull(raw);
-        assertNotNull(tx);
-
-        assertEquals(tx.get("to"), outTx.get("to"));
-        assertEquals(
-                tx.get("value").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("value").toString()).toString());
-        assertEquals(
-                tx.get("gasPrice").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("gasPrice").toString()).toString());
-        assertEquals(
-                tx.get("gasPrice").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("nrgPrice").toString()).toString());
-        assertEquals(
-                tx.get("gas").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("gas").toString()).toString());
-        assertEquals(
-                tx.get("gas").toString(),
-                TypeConverter.StringHexToBigInteger(outTx.get("nrg").toString()).toString());
-        assertEquals("0x", outTx.get("input").toString());
-
-        JSONArray rawTxArray = new JSONArray();
-        rawTxArray.put(raw);
-        assertNotNull(web3Api.eth_sendRawTransaction(rawTxArray));
-    }
-
-    @Test
-    public void testEthSignTransactionAddressParamIsNull() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        AccountManager.inst().unlockAccount(addr, "testPwd", 50000);
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        // don't pass address
-
-        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        assertNull(result);
-        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
-    }
-
-    @Test
-    public void testEthSignTransactionAccountNotUnlocked() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        jsonArray.put(addr);
-
-        RpcMsg rpcMsg = web3Api.eth_signTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        assertNull(result);
-        assertEquals(RpcError.INTERNAL_ERROR, rpcMsg.getError());
-    }
-
-    @Test
-    public void testEthSendTransactionAccountNotUnlocked() {
-        Address addr = new Address(Keystore.create("testPwd"));
-
-        Address toAddr = new Address(Keystore.create("testPwd"));
-
-        JSONObject tx = new JSONObject();
-        tx.put("from", addr.toString());
-        tx.put("gasPrice", "20000000000");
-        tx.put("gas", "21000");
-        tx.put("to", toAddr.toString());
-        tx.put("value", "500000");
-        tx.put("data", "");
-
-        JSONArray jsonArray = new JSONArray();
-        jsonArray.put(tx);
-        jsonArray.put(addr);
-
-        RpcMsg rpcMsg = web3Api.eth_sendTransaction(jsonArray);
-        assertNotNull(rpcMsg);
-
-        JSONObject result = (JSONObject) rpcMsg.getResult();
-        assertNull(result);
-        assertEquals(RpcError.NOT_ALLOWED, rpcMsg.getError());
     }
 }
